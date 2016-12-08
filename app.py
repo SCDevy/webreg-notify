@@ -1,12 +1,21 @@
+import sys
+import json
 from lxml import html, etree
 import requests
 
-USERNAME = ""
-PASSWORD = ""
-TERM = "20171"
-DEPT_ID = ""
-COURSE_ID = "" # actually not needed currently, save just in case
-SECTION_ID = [""]
+if len(sys.argv) < 2:
+    print "JSON file required as an argument ex: python app.py data.json"
+    sys.exit()
+
+with open(sys.argv[1]) as data_file:    
+    data = json.load(data_file)
+
+USERNAME = data["username"]
+PASSWORD = data["password"]
+TERM = data["query"]["term"]
+DEPT_ID = data["query"]["department"]
+COURSE_ID = data["query"]["course"] # actually not needed currently, save just in case
+SECTION_ID = data["query"]["section"]
 
 # configuration variables
 CONFIG = {
@@ -76,7 +85,7 @@ for i in pagination:
             for item in SECTION_ID:
                 if item == identifier[0]:
                     if seats[0] != "Closed":
-                        print "Class with section id " + item + " has " + seats[0] + " open seats!"
+                        print "Class with section ID " + item + " has " + seats[0] + " open seats!"
                         results[item] = True
     
 print results
