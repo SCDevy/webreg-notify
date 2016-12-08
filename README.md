@@ -1,6 +1,10 @@
 # webreg-notify
 Get notified about open registration spots for classes at USC.
 
+## Changelog
+
+- 2016/12/7: Script accepts a configurable query via JSON, prints section IDs and whether there is an opening in the class
+
 ## Usage
 
 1. Install dependencies (recommended to use venv):
