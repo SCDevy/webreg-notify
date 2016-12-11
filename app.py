@@ -23,15 +23,25 @@ CONFIG = {
     "username_name":  "USCID",
     "password_name": "PWD",
     "token_name": "__RequestVerificationToken",
-    "container_class": "section_alt",
-    "section_class": "id_alt", # can be id_alt0 or id_alt1
-    "seats_class": "regSeats_alt" # can be regSeats_alt0 or regSeats_alt1
+    "container_class": "section_alt", # can be alt0 or alt1
+    "section_class": "id_alt",
+    "seats_class": "regSeats_alt",
+    "hours_class": "hours_alt",
+    "days_class": "days_alt",
+    "instructor_class": "instr_alt"
 }
 
-# results object we will mutate and then return
+def num_seats_open(status):
+    if status == "Closed":
+        return 0
+    else:
+        seats = [int(s) for s in status.split() if s.isdigit()]
+        return seats[1] - seats[0]
+
+# results object, we will mutate it and then return
 results = {}
 for section in SECTION_ID:
-    results[section] = False
+    results[section] = {}
 
 # set up session object
 session = requests.session()
@@ -77,15 +87,23 @@ for i in pagination:
         # get container nodes, check for any variations of class names
         section = tree.xpath("//div[contains(@class, \"" + CONFIG["container_class"] + "0\") or contains(@class, \"" + CONFIG["container_class"] + "1\")]")
         
+        # check every listing found for the queried class identifier
         for elem in section:
             tree = html.fromstring(etree.tostring(elem))
             identifier = tree.xpath("//span[contains(@class, \"" + CONFIG["section_class"] + "0\") or contains(@class, \"" + CONFIG["section_class"] + "1\")]/b/text()")
             seats = tree.xpath("//span[contains(@class, \"" + CONFIG["seats_class"] + "0\") or contains(@class, \"" + CONFIG["seats_class"] + "1\")]/span[2]/text()")
+            hours = tree.xpath("//span[contains(@class, \"" + CONFIG["hours_class"] + "0\") or contains(@class, \"" + CONFIG["hours_class"] + "1\")]/text()")
+            days = tree.xpath("//span[contains(@class, \"" + CONFIG["days_class"] + "0\") or contains(@class, \"" + CONFIG["days_class"] + "1\")]/text()")
+            instructor = tree.xpath("//span[contains(@class, \"" + CONFIG["instructor_class"] + "0\") or contains(@class, \"" + CONFIG["instructor_class"] + "1\")]/text()")
             
+            # check if matchs section we're looking for, remove from SECTION_ID array if it does
             for item in SECTION_ID:
-                if item == identifier[0]:
-                    if seats[0] != "Closed":
-                        print "Class with section ID " + item + " has " + seats[0] + " open seats!"
-                        results[item] = True
+                if identifier[0] == item:
+                    results[item] = {
+                        "seats": num_seats_open(seats[0]),
+                        "hours": hours[0],
+                        "days": days[0],
+                        "instructor": instructor[0]
+                    }
     
-print results
+print json.dumps(results, indent=4)
